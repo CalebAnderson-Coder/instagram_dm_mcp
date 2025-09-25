@@ -1,5 +1,6 @@
 from mcp.server.fastmcp import FastMCP
 from instagrapi import Client
+from instagrapi.exceptions import TwoFactorRequired
 import argparse
 from typing import Optional, List, Dict, Any
 import os
@@ -862,6 +863,7 @@ if __name__ == "__main__":
    parser = argparse.ArgumentParser()
    parser.add_argument("--username", type=str, help="Instagram username (can also be set via INSTAGRAM_USERNAME env var)")
    parser.add_argument("--password", type=str, help="Instagram password (can also be set via INSTAGRAM_PASSWORD env var)")
+   parser.add_argument("--code", type=str, help="Instagram 2FA verification code (can also be set via INSTAGRAM_VERIFICATION_CODE env var)")
    args = parser.parse_args()
 
    # Get credentials from environment variables or command line arguments
@@ -888,7 +890,20 @@ if __name__ == "__main__":
            logger.info(f"Loading existing session from {SESSION_FILE}")
            client.load_settings(SESSION_FILE)
        
-       client.login(username, password)
+       try:
+           client.login(username, password)
+       except TwoFactorRequired as e:
+           verification_code = args.code or os.getenv("INSTAGRAM_VERIFICATION_CODE")
+           if not verification_code:
+               logger.error("Two-factor authentication required but no verification code provided.")
+               print("Error: 2FA requerido. Proporciona el código con --code o variable INSTAGRAM_VERIFICATION_CODE")
+               exit(1)
+           # Retry login providing verification_code
+           client.login(
+               username,
+               password,
+               verification_code=verification_code,
+           )
        
        # Save session for future use to avoid repeated fresh authentication
        client.dump_settings(SESSION_FILE)
