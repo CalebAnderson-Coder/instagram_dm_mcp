@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Instagram DM Agent MVP</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: #2c3e50;
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            opacity: 0.8;
+            font-size: 1.1em;
+        }
+
+        .tabs {
+            display: flex;
+            background: #34495e;
+        }
+
+        .tab-button {
+            flex: 1;
+            padding: 15px;
+            background: none;
+            border: none;
+            color: white;
+            font-size: 1.1em;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .tab-button.active {
+            background: #3498db;
+        }
+
+        .tab-button:hover {
+            background: #2980b9;
+        }
+
+        .tab-content {
+            display: none;
+            padding: 30px;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            font-size: 1em;
+            transition: border-color 0.3s;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #3498db;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 5px;
+            font-size: 1em;
+            cursor: pointer;
+            transition: all 0.3s;
+            flex: 1;
+        }
+
+        .btn-primary {
+            background: #27ae60;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #229954;
+        }
+
+        .btn-danger {
+            background: #e74c3c;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #c0392b;
+        }
+
+        .status-area {
+            margin-top: 20px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 5px;
+            border-left: 4px solid #3498db;
+        }
+
+        .status-area h3 {
+            margin-bottom: 10px;
+            color: #2c3e50;
+        }
+
+        .status-text {
+            font-family: monospace;
+            white-space: pre-wrap;
+            color: #34495e;
+        }
+
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .kpi-card {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            text-align: center;
+            border-top: 4px solid #3498db;
+        }
+
+        .kpi-card h3 {
+            font-size: 2em;
+            margin-bottom: 5px;
+            color: #2c3e50;
+        }
+
+        .kpi-card p {
+            color: #7f8c8d;
+            font-size: 0.9em;
+        }
+
+        .kpi-card.response-rate {
+            border-top-color: #27ae60;
+        }
+
+        .kpi-card.qualification-rate {
+            border-top-color: #e67e22;
+        }
+
+        .alert {
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+
+        .alert-success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .alert-error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #3498db;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🤖 Instagram DM Agent MVP</h1>
+            <p>Automatiza tus campañas de mensajes directos en Instagram</p>
+        </div>
+
+        <div class="tabs">
+            <button class="tab-button active" onclick="showTab('control')">🎛️ Control del Agente</button>
+            <button class="tab-button" onclick="showTab('kpis')">📊 Dashboard de KPIs</button>
+        </div>
+
+        <div id="control" class="tab-content active">
+            <h2 style="margin-bottom: 20px; color: #2c3e50;">Configuración del Agente</h2>
+
+            <div id="alert-container"></div>
+
+            <form id="agent-form">
+                <div class="form-group">
+                    <label for="username">Usuario de Instagram:</label>
+                    <input type="text" id="username" required placeholder="tu_usuario_instagram">
+                </div>
+
+                <div class="form-group">
+                    <label for="password">Contraseña:</label>
+                    <input type="password" id="password" required placeholder="tu_contraseña">
+                </div>
+
+                <div class="form-group">
+                    <label for="target_account">Cuenta Objetivo (sin @):</label>
+                    <input type="text" id="target_account" required placeholder="ejemplo: ecoflowpower_ve">
+                </div>
+
+                <div class="form-group">
+                    <label for="api_key">API Key de Google AI:</label>
+                    <input type="password" id="api_key" required placeholder="tu_api_key_de_google">
+                </div>
+
+                <div class="form-group">
+                    <label for="verification_code">Código de Verificación (opcional):</label>
+                    <input type="text" id="verification_code" placeholder="solo si tienes 2FA">
+                </div>
+
+                <div class="button-group">
+                    <button type="button" class="btn btn-primary" onclick="startAgent()">
+                        ▶️ Iniciar Agente
+                    </button>
+                    <button type="button" class="btn btn-danger" onclick="stopAgent()">
+                        ⏹️ Detener Agente
+                    </button>
+                </div>
+            </form>
+
+            <div class="status-area">
+                <h3>Estado del Agente: <span id="agent-status">Detenido</span></h3>
+                <div id="status-text" class="status-text">Esperando configuración...</div>
+            </div>
+        </div>
+
+        <div id="kpis" class="tab-content">
+            <h2 style="margin-bottom: 20px; color: #2c3e50;">Dashboard de Rendimiento</h2>
+
+            <div class="kpi-grid">
+                <div class="kpi-card">
+                    <h3 id="total-messages">0</h3>
+                    <p>Mensajes Enviados Hoy</p>
+                </div>
+
+                <div class="kpi-card">
+                    <h3 id="total-replies">0</h3>
+                    <p>Respuestas Recibidas</p>
+                </div>
+
+                <div class="kpi-card response-rate">
+                    <h3 id="response-rate">0%</h3>
+                    <p>Tasa de Respuesta</p>
+                </div>
+
+                <div class="kpi-card">
+                    <h3 id="total-qualified">0</h3>
+                    <p>Leads Calificados</p>
+                </div>
+
+                <div class="kpi-card qualification-rate">
+                    <h3 id="qualification-rate">0%</h3>
+                    <p>Tasa de Calificación</p>
+                </div>
+            </div>
+
+            <div style="text-align: center; margin-top: 30px;">
+                <button class="btn btn-primary" onclick="refreshKPIs()">
+                    🔄 Actualizar KPIs
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
