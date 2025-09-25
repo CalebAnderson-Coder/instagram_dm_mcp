@@ -136,7 +136,22 @@ function stopStatusUpdates() {
 // KPI functions
 async function refreshKPIs() {
     try {
-        const response = await fetch('/api/kpis');
+        // Get the username from the form to request KPIs for the correct account
+        const username = document.getElementById('username').value;
+
+        if (!username) {
+            // Show placeholder data when no username is entered
+            document.getElementById('total-messages').textContent = '0';
+            document.getElementById('total-replies').textContent = '0';
+            document.getElementById('response-rate').textContent = '0%';
+            document.getElementById('total-qualified').textContent = '0';
+            document.getElementById('qualification-rate').textContent = '0%';
+
+            showAlert('Ingresa un nombre de usuario y configura el agente para ver las métricas.', 'success');
+            return;
+        }
+
+        const response = await fetch(`/api/kpis/${username}`);
         const kpis = await response.json();
 
         // Update KPI cards
@@ -145,6 +160,11 @@ async function refreshKPIs() {
         document.getElementById('response-rate').textContent = `${kpis.response_rate}%`;
         document.getElementById('total-qualified').textContent = kpis.total_qualified;
         document.getElementById('qualification-rate').textContent = `${kpis.qualification_rate}%`;
+
+        // Show message if no data available
+        if (kpis.message) {
+            showAlert(kpis.message, 'success');
+        }
 
         // Add visual feedback
         const cards = document.querySelectorAll('.kpi-card');

@@ -106,13 +106,14 @@ INITIAL_MESSAGE_TEMPLATES = [
 # =================================================================================================
 
 class InstagramAppointmentSetter:
-    def __init__(self, username, password, verification_code=None, api_key=None):
+    def __init__(self, username, password, verification_code=None, api_key=None, db_path=None):
         self.client = Client()
         self.my_user_id = None
         self.username = username
         self.password = password
         self.verification_code = verification_code
-        self.db_path = "leads.db"
+        # Use custom database path if provided, otherwise use default
+        self.db_path = db_path or "leads.db"
         self._setup_database()
 
         if api_key:

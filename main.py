@@ -33,17 +33,27 @@ class AgentConfig(BaseModel):
     api_key: str
     verification_code: Optional[str] = None
 
+def get_db_path(username: str) -> str:
+    """Generate a unique database path for each Instagram account"""
+    # Clean username to create a valid filename
+    clean_username = username.replace('@', '').replace('.', '_').replace('-', '_')
+    return f"leads_{clean_username}.db"
+
 def run_agent_background(config: AgentConfig):
     """Function to run the agent in background thread"""
     global agent_instance, agent_running
 
     try:
-        # Create agent instance
+        # Generate unique database path for this account
+        db_path = get_db_path(config.username)
+
+        # Create agent instance with custom database
         agent_instance = InstagramAppointmentSetter(
             username=config.username,
             password=config.password,
             verification_code=config.verification_code,
-            api_key=config.api_key
+            api_key=config.api_key,
+            db_path=db_path
         )
 
         # Login
@@ -94,11 +104,25 @@ async def get_agent_status():
         "status": "running" if agent_running else "stopped"
     }
 
-@app.get("/api/kpis")
-async def get_kpis():
-    """Get Key Performance Indicators from the database"""
+@app.get("/api/kpis/{username}")
+async def get_kpis(username: str):
+    """Get Key Performance Indicators from the database for a specific account"""
     try:
-        conn = sqlite3.connect("leads.db")
+        # Get the database path for this username
+        db_path = get_db_path(username)
+
+        # Check if database exists
+        if not os.path.exists(db_path):
+            return {
+                "total_messages_sent": 0,
+                "total_replies": 0,
+                "total_qualified": 0,
+                "response_rate": 0.0,
+                "qualification_rate": 0.0,
+                "message": "No data available for this account yet"
+            }
+
+        conn = sqlite3.connect(db_path)
         cursor = conn.cursor()
 
         # Get total messages sent today
